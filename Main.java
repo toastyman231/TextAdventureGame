@@ -1,3 +1,4 @@
+//Jake Morgenstern
 import java.util.Scanner;
 import java.util.Random;
 import java.lang.Math;
@@ -23,7 +24,7 @@ class Main {
 		loopBool = true;
 		
 		while(loopBool){
-			System.out.println("Please enter the number that corresponds to the class you'd like to play as:\n1.Bruiser\n2.Thief\n3.Glass Cannon");
+			System.out.println("Please enter the number that corresponds to the class you'd like to play as:\n1.Bruiser (5 strength, 14 defense, 30 health)\n2.Thief (4 strength, 15 defense, 30 health)\n3.Glass Cannon (10 strength, 16 defense, 5 health)");
 			classChoice = scan.nextInt();
 			scan.nextLine(); //I know we have to store these in a variable, this is just so it doesnt read a newline character as an input
 			switch(classChoice){
@@ -76,17 +77,18 @@ class Main {
 			String tutorialChoice = scan.nextLine();
 			if(tutorialChoice.equalsIgnoreCase("attacking")){
 				System.out.println("???: You'd like to learn about " + tutorialChoice + ", huh? I can do that.");
-				System.out.println("???: Attacking will do more damage the higher your strength is. Your enemy may attempt to block, which will lower the amount of damage you do.");
-				System.out.println("???: You may also choose to block, which will give you a chance to absorb some damage the next time your enemy attacks. If you manage to block their entire attack, you may even regain some health points! But beware, for the same goes for your enemies...");
+				System.out.println("???: Your attacks will be more likely to hit the higher your strength is. If you roll higher than the enemies defense, your attack hits and you roll for damage. This is also affected by your strength.");
+				System.out.println("???: You may also choose to block, which will increase your defense by a random amount on your next turn.");
 			} else {
-				System.out.println("???: Well then. First we'll cover blocking. When you block you have a chance to absorb some damage from the next enemy attack. If you manage to block the enemies entire attack, you may regain some health points. The same goes for your enemies, of course.");
-				System.out.println("???: And of course, there's attacking. You may attack your enemy on your turn, which will deal damage based on your strength. If the enemy blocked last turn, they may absorb some or all of your attack, as we discussed.");
+				System.out.println("???: Well then. First we'll cover blocking. When you block your defense will go up next turn. If your enemies attack is lower than your defense, you will block them.");
+				System.out.println("???: And of course, there's attacking. You may attack your enemy on your turn, which will be more likely to hit the higher your strength is. If you roll higher than the enemies defense, your attack hits and you roll for damage. This is also affected by your strength.");
 			}
 			System.out.println("???: I believe that covers everything. Do you need me to go over it again?");
 			System.out.println("Please enter 'y' to hear the tutorial again, or 'n' to continue.");
 			String cont = scan.nextLine();
 			if(cont.equalsIgnoreCase("n")) { loopBool = false; }
 		}
+		loopBool = true;
 
 		System.out.println("???: Say, I never told you my name did I? Well, I unfortunately forgot it long ago. You may give me a nickname if you wish.");
 		System.out.println("Please enter a name for the old man.");
@@ -94,17 +96,23 @@ class Main {
 		System.out.println(teacherName + ": So, you wish to call me " + teacherName + ", do you? I suppose I can accept that. Very well.");
 		System.out.println(teacherName + ": To test your new knowledge, I propose a duel. Actually, I insist. En garde!");
 
-		Character teacher = new Character(teacherName, player.strength+1, player.defense-1, player.minDefense-1, 40, 40);
+		Character teacher = new Character(teacherName, player.strength+1, player.defense-2, player.minDefense-2, 40, 40);
 
-		if(Battle(player, teacher)){
-			System.out.print(teacherName + ": Very impressive, " + name + ". You will do well out there.");
-		} else {
-			System.out.println(teacherName + ": Disappointing. You may need to practice more.");
+		while(loopBool){
+			if(Battle(player, teacher)){
+				System.out.print(teacherName + ": Very impressive, " + name + ". You will do well out there.");
+				loopBool = false;
+			} else {
+				System.out.println(teacherName + ": Disappointing. You may need to practice more.");
+				System.out.println("Type 'y' to try again, or 'n' to quit.");
+				String cont = scan.nextLine();
+				if(cont.equalsIgnoreCase("n")) { loopBool = false; }
+			}
 		}
   }
 
   public static boolean Battle(Character player, Character enemy){
-    if(player.health <= 0) { return false; } 
+    if(player.health <= 0) { player.health = player.maxHealth; return false; } 
     else if(enemy.health <= 0) { player.health = player.maxHealth; return true; }
     int playerAttack = 0;
     int enemyAttack = 0;
@@ -128,7 +136,7 @@ class Main {
     } else {
       //Defense will be raised by a random amount next turn only.
       player.defense += rand.ints(1, 5).findFirst().getAsInt();
-      System.out.println("Your defense will go up next turn!");
+      System.out.println("Your defense is up until your next turn!");
     }
 
     //Enemy will defend if at or below 30 percent health, otherwise they attack
@@ -178,3 +186,6 @@ class Character {
         return Math.max(min, Math.min(max, value));
     }
 }
+
+// TODO: Add actual story and gameplay, not just a battle tutorial.
+// TODO: Give the battle system more depth. It's really easy right now.
