@@ -48,16 +48,16 @@ class Main {
 
 		switch(classChoice){
 			case 1:
-				player = new Character(name, 4, 2, 30, 30);
+				player = new Character(name, 5, 14, 14, 30, 30);
 				break;
 			case 2:
-				player = new Character(name, 2, 4, 30, 30);
+				player = new Character(name, 4, 15, 15, 30, 30);
 				break;
 			case 3:
-				player = new Character(name, 8, 4, 5, 5);
+				player = new Character(name, 10, 16, 16, 5, 5);
 				break;
 			default:
-				player = new Character(name, 4, 2, 30, 30);
+				player = new Character(name, 5, 14, 14, 30, 30);
 				break;
 		}
 
@@ -94,22 +94,20 @@ class Main {
 		System.out.println(teacherName + ": So, you wish to call me " + teacherName + ", do you? I suppose I can accept that. Very well.");
 		System.out.println(teacherName + ": To test your new knowledge, I propose a duel. Actually, I insist. En garde!");
 
-		Character teacher = new Character(teacherName, player.strength+1, player.defense-1, 40, 40);
+		Character teacher = new Character(teacherName, player.strength+1, player.defense-1, player.minDefense-1, 40, 40);
 
-		if(Battle(player, teacher, player.health/3, 0)){
-			System.out.print(teacherName + ": Impressive. You will do well out there.");
+		if(Battle(player, teacher)){
+			System.out.print(teacherName + ": Very impressive, " + name + ". You will do well out there.");
 		} else {
 			System.out.println(teacherName + ": Disappointing. You may need to practice more.");
 		}
   }
 
-  public static boolean Battle(Character player, Character enemy, int pDef, int eDef){
+  public static boolean Battle(Character player, Character enemy){
     if(player.health <= 0) { return false; } 
-    else if(enemy.health <= 0) { return true; }
+    else if(enemy.health <= 0) { player.health = player.maxHealth; return true; }
     int playerAttack = 0;
     int enemyAttack = 0;
-    int playerDefense = pDef;
-    int enemyDefense = eDef;
 
     //Determine player action
     System.out.println("It is your turn! Your current health is " + player.health + ". Please type 'a' to attack, or 'd' to defend, without the quotes.");
@@ -117,30 +115,38 @@ class Main {
 
     //Attack or defend based on player choice
     if(choice.equalsIgnoreCase("a")){
-      //Deal any damage not absorbed by current enemy block amount, then reset their block
+      //Roll to decide if the player hits. An attack hits if its equal to or greater than the enemies defense
       playerAttack = rand.ints(1, 21).findFirst().getAsInt() + player.strength;
-      enemy.Damage(playerAttack - enemyDefense);
-      System.out.println("You attacked for " + playerAttack + ", the " + enemy.name + " defended for " + enemyDefense + ", and you dealt " + (playerAttack - enemyDefense) + " damage.");
-      enemyDefense = 0;
+			if(playerAttack >= enemy.defense){
+				//Roll for damage, strength also applies to this
+				int dam = enemy.Damage(rand.ints(1, 11).findFirst().getAsInt() + player.strength);
+				System.out.println("Your attack hit! You did " + dam + " damage!");
+			} else {
+				System.out.println("The enemy " + enemy.name + " blocked your attack!");
+			}
+			enemy.defense = enemy.minDefense;
     } else {
-      //Determine defense for next turn
-      playerDefense = 0;
-      playerDefense = rand.ints(1, 21).findFirst().getAsInt() + player.defense;
-      System.out.println("Next turn you will defend against " + playerDefense + " damage.");
+      //Defense will be raised by a random amount next turn only.
+      player.defense += rand.ints(1, 5).findFirst().getAsInt();
+      System.out.println("Your defense will go up next turn!");
     }
 
     //Enemy will defend if at or below 30 percent health, otherwise they attack
     if((double)enemy.health / enemy.maxHealth <= 0.3){
-      enemyDefense = 0;
-      enemyDefense = rand.ints(1, 21).findFirst().getAsInt() + enemy.defense;
+      enemy.defense += rand.ints(1, 5).findFirst().getAsInt();
+			System.out.println("The enemy " + enemy.name + " seems to be blocking.");
     } else {
       enemyAttack = rand.ints(1, 21).findFirst().getAsInt() + enemy.strength;
-      player.Damage(enemyAttack - playerDefense);
-      System.out.println(enemy.name + " attacked for " + enemyAttack + ", you defended for " + playerDefense + ", and they dealt " + (enemyAttack - playerDefense) + " damage to you.");
-      playerDefense = 0;
+			if(enemyAttack >= player.defense){
+				int dam = player.Damage(rand.ints(1, 11).findFirst().getAsInt() + player.strength);
+				System.out.println("The enemy " + enemy.name + "'s attack hit! They did " + dam + " damage!");
+			} else {
+				System.out.println("You blocked the enemy " + enemy.name + "'s' attack!");
+			}
+			player.defense = player.minDefense;
     }
 
-    return Battle(player, enemy, playerDefense, enemyDefense);
+    return Battle(player, enemy);
   }
 }
 
@@ -148,38 +154,27 @@ class Character {
   String name;
   int strength;
   int defense;
+	int minDefense;
   int maxHealth;
   int health;
 
-  public Character(String charName, int str, int def, int mHealth, int hp){
+  public Character(String charName, int str, int def, int mDef, int mHealth, int hp){
     this.name = charName;
     this.strength = str;
     this.defense = def;
+		this.minDefense = mDef;
     this.maxHealth = mHealth;
     this.health = hp;
   }
 
-  public void Damage(int damage){
+  public int Damage(int damage){
     if(damage >= 0){
       health = clamp(health - damage, 0, maxHealth);
-    } else {
-      health += clamp(damage, 0, maxHealth/3);
     }
+		return damage;
   }
 
   public static int clamp(int value, int min, int max) {
         return Math.max(min, Math.min(max, value));
     }
 }
-
-
-
-// TODO: Delete the following once its no longer needed for reference
-/*Character c = new Character("Gamer", 4, 2, 20, 20);
-Character e = new Character("Toad", 5, 3, 40, 40);
-
-if(Battle(c, e, c.health/3, 0)){
-  System.out.println("You won!");
-} else {
-  System.out.println("You lost...");
-}*/
